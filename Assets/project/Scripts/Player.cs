@@ -27,7 +27,6 @@ public class Player : MonoBehaviour
         {
             transform.position += Vector3.forward * 5f * Time.deltaTime;
         }
-
         //move backwards
         if (Input.GetKey(KeyCode.S))
         {
