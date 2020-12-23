@@ -14,6 +14,9 @@ public class Player : MonoBehaviour
 
     public float jumpingVelocity = 150;
 
+    [Header("Equipment")]
+    public Sword sword;
+
     private Rigidbody playerRigidbody;
     private bool canJump;
     private Quaternion targetModelRoatation;
@@ -78,6 +81,12 @@ public class Player : MonoBehaviour
             canJump = false;
             playerRigidbody.AddForce(Vector3.up * jumpingVelocity);
             playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, jumpingVelocity, playerRigidbody.velocity.z);
+        }
+
+        //Check equipment interaction
+        if (Input.GetKeyDown("z"))
+        {
+            sword.Attack();
         }
     }
 }
