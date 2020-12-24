@@ -35,7 +35,7 @@ public class Bomb : MonoBehaviour
             }
 
             StartCoroutine(Expload());
-            Destroy(gameObject);
+            //Destroy(gameObject);
         }
     }
 
