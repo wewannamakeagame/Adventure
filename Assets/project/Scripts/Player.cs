@@ -20,7 +20,7 @@ public class Player : MonoBehaviour
     public int bombAmmount = 5;
     public float throwingSpeed;
     public GameObject bombPrefab;
-
+    public Bow bow;
     private Rigidbody playerRigidbody;
     private bool canJump;
     private Quaternion targetModelRoatation;
@@ -93,6 +93,10 @@ public class Player : MonoBehaviour
             sword.Attack();
         }
         if (Input.GetKeyDown("x"))
+        {
+            bow.Attack();
+        }
+        if (Input.GetKeyDown("c"))
         {
             ThrowBomb();
         }
