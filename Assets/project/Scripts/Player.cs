@@ -17,6 +17,10 @@ public class Player : MonoBehaviour
     [Header("Equipment")]
     public Sword sword;
 
+    public int bombAmmount = 5;
+    public float throwingSpeed;
+    public GameObject bombPrefab;
+
     private Rigidbody playerRigidbody;
     private bool canJump;
     private Quaternion targetModelRoatation;
@@ -51,28 +55,28 @@ public class Player : MonoBehaviour
         {
             playerRigidbody.velocity = new Vector3(movingVelocity, playerRigidbody.velocity.y,
                 playerRigidbody.velocity.z);
-            targetModelRoatation = Quaternion.Euler(0, 270, 0);
+            targetModelRoatation = Quaternion.Euler(0, 90, 0);
         }
         //move left
         if (Input.GetKey(KeyCode.A))
         {
             playerRigidbody.velocity = new Vector3(-movingVelocity, playerRigidbody.velocity.y,
                 playerRigidbody.velocity.z);
-            targetModelRoatation = Quaternion.Euler(0, 90, 0);
+            targetModelRoatation = Quaternion.Euler(0, 270, 0);
         }
         //move forward
         if (Input.GetKey(KeyCode.W))
         {
             playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, playerRigidbody.velocity.y,
                 movingVelocity);
-            targetModelRoatation = Quaternion.Euler(0, 180, 0);
+            targetModelRoatation = Quaternion.Euler(0, 0, 0);
         }
         //move backwards
         if (Input.GetKey(KeyCode.S))
         {
             playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, playerRigidbody.velocity.y,
                 -movingVelocity);
-            targetModelRoatation = Quaternion.Euler(0, 0, 0);
+            targetModelRoatation = Quaternion.Euler(0, 180, 0);
         }
 
         //jump up
@@ -87,6 +91,22 @@ public class Player : MonoBehaviour
         if (Input.GetKeyDown("z"))
         {
             sword.Attack();
+        }
+        if (Input.GetKeyDown("x"))
+        {
+            ThrowBomb();
+        }
+    }
+
+    private void ThrowBomb()
+    {
+        if (bombAmmount > 0)
+        {
+            GameObject bombObject = Instantiate(bombPrefab);
+            bombObject.transform.position = transform.position + model.transform.forward;
+            Vector3 throwingDirection = (model.transform.forward + Vector3.up).normalized;
+            bombObject.GetComponent<Rigidbody>().AddForce(throwingDirection * throwingSpeed);
+            bombAmmount--;
         }
     }
 }

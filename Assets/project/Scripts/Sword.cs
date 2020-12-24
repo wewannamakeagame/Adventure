@@ -33,7 +33,7 @@ public class Sword : MonoBehaviour
         if (cooldownTimer > 0f)
             return;
 
-        targetRotation = Quaternion.Euler(-90, 0, 0);
+        targetRotation = Quaternion.Euler(90, 0, 0);
         cooldownTimer = cooldownDuration;
 
         StartCoroutine(CooldownWait());
