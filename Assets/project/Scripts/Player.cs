@@ -28,6 +28,7 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
+        bow.gameObject.SetActive(false);
         playerRigidbody = GetComponent<Rigidbody>();
         targetModelRoatation = Quaternion.Euler(0, 0, 0);
     }
@@ -90,10 +91,16 @@ public class Player : MonoBehaviour
         //Check equipment interaction
         if (Input.GetKeyDown("z"))
         {
+            bow.gameObject.SetActive(false);
+
+            sword.gameObject.SetActive(true);
             sword.Attack();
         }
         if (Input.GetKeyDown("x"))
         {
+            sword.gameObject.SetActive(false);
+
+            bow.gameObject.SetActive(true);
             bow.Attack();
         }
         if (Input.GetKeyDown("c"))
