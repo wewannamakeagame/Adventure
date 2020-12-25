@@ -27,12 +27,13 @@ public class Bomb : MonoBehaviour
         if (explosionTimer <= 0f && exploded == false)
         {
             exploded = true;
-            //Collider[] hitObjects = Physics.OverlapSphere(transform.position, radius);
+            Collider[] hitObjects = Physics.OverlapSphere(transform.position, radius);
 
-            //foreach (Collider collider in hitObjects)
-            //{
-            //    Debug.Log(collider.name + "was hit!");
-            //}
+            foreach (Collider collider in hitObjects)
+            {
+                if (collider.GetComponent<Enemy>() != null)
+                    collider.GetComponent<Enemy>().Hit();
+            }
 
             StartCoroutine(Expload());
             //Destroy(gameObject);
