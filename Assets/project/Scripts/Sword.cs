@@ -14,6 +14,11 @@ public class Sword : MonoBehaviour
     private float cooldownTimer;
     private bool isAttacking;
 
+    public bool IsAttacking
+    {
+        get { return isAttacking; }
+    }
+
     // Start is called before the first frame update
     private void Start()
     {
