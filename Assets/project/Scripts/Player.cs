@@ -4,16 +4,23 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    public CharacterController controller;
+    public Transform cam;
+    
+
     [Header("Visuals")]
     public GameObject model;
-
-    public float rotatingSpeed = 2f;
+    public float rotatingSmoothTime = 0.1f;
+    float rotatingSmoothSpeed;
 
     [Header("Movement")]
+    public float mass = 3.0f;
     public float movingVelocity = 10;
-
-    public float knockbackVelocity;
-    public float jumpingVelocity = 150;
+    public float knockbackForce;
+    public Vector3 jumpingVelocity;
+    public float jumpHeight = 1.0f;
+    public float gravity = -9.81f;
+    public float maxDistToGround = 0.1f;
 
     [Header("Equipment")]
     public Sword sword;
@@ -24,9 +31,11 @@ public class Player : MonoBehaviour
     public GameObject bombPrefab;
     public Bow bow;
     private Rigidbody playerRigidbody;
-    private bool canJump;
+    public bool canJump;
     private Quaternion targetModelRoatation;
     private float knockbackTimer;
+    private Vector3 impact = Vector3.zero;
+    
 
     // Start is called before the first frame update
     private void Start()
@@ -39,14 +48,12 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        // Raycast to identify if the player can jump
-        RaycastHit hit;
-        if (Physics.Raycast(transform.position, Vector3.down, out hit, 1.01f))
-        {
-            canJump = true;
-        }
-        model.transform.rotation = Quaternion.Lerp(model.transform.rotation, targetModelRoatation,
-            Time.deltaTime * rotatingSpeed);
+        //Apply Impact Forces
+        if (impact.magnitude > 0.2f) controller.Move(impact * Time.deltaTime);
+        impact = Vector3.Lerp(impact, Vector3.zero, 5 * Time.deltaTime);
+
+       
+        
         if (knockbackTimer > 0)
         {
             knockbackTimer -= Time.deltaTime;
@@ -56,44 +63,42 @@ public class Player : MonoBehaviour
 
     private void ProcessInput()
     {
-        playerRigidbody.velocity = new Vector3(0, playerRigidbody.velocity.y, 0);
+
         // Move in the XZ plane.
-        //move right
-        if (Input.GetKey(KeyCode.D))
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+        Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
+
+        if(direction.magnitude >= 0.1f)
         {
-            playerRigidbody.velocity = new Vector3(movingVelocity, playerRigidbody.velocity.y,
-                playerRigidbody.velocity.z);
-            targetModelRoatation = Quaternion.Euler(0, 90, 0);
-        }
-        //move left
-        if (Input.GetKey(KeyCode.A))
-        {
-            playerRigidbody.velocity = new Vector3(-movingVelocity, playerRigidbody.velocity.y,
-                playerRigidbody.velocity.z);
-            targetModelRoatation = Quaternion.Euler(0, 270, 0);
-        }
-        //move forward
-        if (Input.GetKey(KeyCode.W))
-        {
-            playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, playerRigidbody.velocity.y,
-                movingVelocity);
-            targetModelRoatation = Quaternion.Euler(0, 0, 0);
-        }
-        //move backwards
-        if (Input.GetKey(KeyCode.S))
-        {
-            playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, playerRigidbody.velocity.y,
-                -movingVelocity);
-            targetModelRoatation = Quaternion.Euler(0, 180, 0);
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref rotatingSmoothSpeed, rotatingSmoothTime);
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
+            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            controller.Move(moveDir * movingVelocity * Time.deltaTime);
+
         }
 
         //jump up
-        if (canJump && Input.GetKeyDown("space"))
+        
+        if (canJump && jumpingVelocity.y < -1000) jumpingVelocity.y = 0;
+        if (Input.GetButtonDown("Jump"))
         {
-            canJump = false;
-            playerRigidbody.AddForce(Vector3.up * jumpingVelocity);
-            playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, jumpingVelocity, playerRigidbody.velocity.z);
+            // Raycast to identify if the player can jump
+            int layerMask = 1 << 8;
+            //layerMask = ~layerMask;
+            RaycastHit hit;
+
+            Physics.Raycast(transform.position, Vector3.down, out hit, maxDistToGround, layerMask);
+            Debug.DrawRay(transform.position, Vector3.down * hit.distance, Color.red);
+            if (hit.collider != null)
+            {
+                jumpingVelocity.y = Mathf.Sqrt(jumpHeight * -3.0f * gravity);
+            }
         }
+        jumpingVelocity.y += gravity * Time.deltaTime;
+        controller.Move(jumpingVelocity * Time.deltaTime);
 
         //Check equipment interaction
         if (Input.GetKeyDown("z"))
@@ -121,7 +126,7 @@ public class Player : MonoBehaviour
         if (bombAmmount > 0)
         {
             GameObject bombObject = Instantiate(bombPrefab);
-            bombObject.transform.position = transform.position + model.transform.forward;
+            bombObject.transform.position = transform.position + new Vector3(0f,1f,0f) + model.transform.forward;
             Vector3 throwingDirection = (model.transform.forward + Vector3.up).normalized;
             bombObject.GetComponent<Rigidbody>().AddForce(throwingDirection * throwingSpeed);
             bombAmmount--;
@@ -145,10 +150,7 @@ public class Player : MonoBehaviour
     private void Hit(Vector3 direction)
     {
         Vector3 knockbackDirection = (direction + Vector3.up).normalized;
-        playerRigidbody.AddForce(knockbackDirection * knockbackVelocity);
-        knockbackTimer = 1f;
-        health--;
-        if (health <= 0)
-            Destroy(gameObject);
+        impact += knockbackDirection * knockbackForce / mass;
+        canJump = false;
     }
 }
